@@ -26,8 +26,9 @@ $tx->res->dom('div.novel_sublist tr')->each (sub {
 for my $story (keys %$stories) { 
     sleep 1; # be nice to poor webserver
     my $tx   = $ua->get($story);
-    my $text = "\\storytitle{$stories->{$story}->{name}}{$author}\n";
-    $text   .= $tx->res->dom->at('div.novel_view#novel_view')->text(0);
+    #my $text = "\\storytitle{$stories->{$story}->{name}}{$author}\n";
+    #$text   .= $tx->res->dom->at('div.novel_view#novel_view')->text(0);
+    my $text = $tx->res->dom->at('div.novel_view#novel_view')->text(0);
     Mojo::Command->write_rel_file(
             "scrape_data/$author/$stories->{$story}->{year}/$author-$stories->{$story}->{name}.txt",
             $text
