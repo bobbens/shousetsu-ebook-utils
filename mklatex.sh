@@ -14,7 +14,7 @@ LATTAIL=tail.tex
 test -d $TMPDIR || mkdir $TMPDIR
 test -d $OUTDIR || mkdir $OUTDIR
 
-for FILEPATH in $INDIR/**/*web*.txt; do
+for FILEPATH in $INDIR/**/*.txt; do
    # Parse name and such
    FILE=`basename "$FILEPATH"`
    FILE=${FILE%.txt}
@@ -26,14 +26,20 @@ for FILEPATH in $INDIR/**/*web*.txt; do
    TFILE="$TMPDIR/$FILE.tex"
    OFILE="$OUTDIR/$FILE.pdf"
 
+   # If already created avoid recreation
+   test -f "$OFILE" && continue
+
+   OTITLE="$TMPDIR/title"
+
    # Generate the pdf
    echo "Generating PDF for $AUTHOR - $TITLE"
-   cat "$LATHEAD" "$FILEPATH" "$LATTAIL" > "$TFILE"
+   echo "\storytitle{$TITLE}{$AUTHOR}" > "$OTITLE"
+   cat "$LATHEAD" "$OTITLE" "$FILEPATH" "$LATTAIL" > "$TFILE"
    (cd "$TMPDIR"; xelatex "$FILE" > /dev/null)
 
    # Copy result over
    cp "$TMPDIR/$FILE.pdf" "$OFILE" || exit
 done
 
-#rmdir $OUTDIR
+#rm -r .latex_out
 
