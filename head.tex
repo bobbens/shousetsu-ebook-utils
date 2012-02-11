@@ -1,0 +1,21 @@
+\documentclass[8pt]{article} 
+\usepackage[paperwidth=9cm, paperheight=11.5cm, top=0.5cm, left=0.5cm, right=0.5cm, bottom=0.5cm]{geometry}
+\usepackage{ruby} % Furigana
+\usepackage{xeCJK} % Font and CJK stuff
+\newfontlanguage{Japanese}{JPN}
+\setCJKmainfont{IPAGothic}
+\setCJKfamilyfont{IPAvert}[Script=CJK,Vertical=RotatedGlyphs]{IPAGothic} % We want vertical input
+
+% Small macro to have titles.
+\newcommand{\storytitle}[2]{\hspace{20pt}{\large \textbf{#1}} \hspace{20pt}{\textbf #2}\\ \\}
+\newcommand{\javert}{\CJKfamily{IPAvert}}
+
+\frenchspacing
+\sloppy
+\pagestyle{empty}
+
+\begin{document}
+
+% some macros to make CJK vertical more painless
+{\javert
+

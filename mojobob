@@ -1,0 +1,43 @@
+use strict;
+use warnings;
+use Mojo::UserAgent;
+
+my $url = shift or die 
+    "Usage: scraper http://ncode.syosetu.com/n8709j/\n"; 
+
+my $ua = Mojo::UserAgent->new->detect_proxy;
+my $tx = $ua->get($url);
+
+my $author = $tx->res->dom->at('div.novel_writername a')->text;
+my $stories;
+
+$tx->res->dom('div.novel_sublist tr')->each (sub { 
+    # probably a better way to do this
+    # I am sorry for my crimes
+    return unless $_->children->[1]->{class} || '' eq 'long_update';
+    my $a      = $_->children->[0]->children->[0];
+    my $date   = $_->children->[1]->text;
+    my $url    = Mojo::URL->new($a->{href})->to_abs($tx->req->url);
+    my $name   = $a->text;
+    (my $year) = $date =~ /(\d+)/;
+    $stories->{$url} = { name => $name, year => $year };
+});
+
+for my $story (keys %$stories) { 
+    sleep 1; # be nice to poor webserver
+    my $tx   = $ua->get($story);
+    my $text = "\\storytitle{$stories->{$story}->{name}}{$author}\n";
+    $text   .= $tx->res->dom->at('div.novel_view#novel_view')->text(0);
+    Mojo::Command->write_rel_file(
+            "scrape_data/$author/$stories->{$story}->{year}/$author-$stories->{$story}->{name}.txt",
+            $text
+    )
+}
+
+__END__
+# Error Checking
+if (my $res = $tx->success) { say $res->body }
+else {
+      my ($message, $code) = $tx->error;
+        say "Error: $message";
+}
