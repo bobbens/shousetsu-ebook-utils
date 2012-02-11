@@ -5,5 +5,5 @@ INURLS=( http://ncode.syosetu.com/n8725k/
 
 for x in "${INURLS[@]}"
 do
-   echo perl mojobob "$x"
+   perl mojobob "$x"
 done
