@@ -17,12 +17,13 @@ furiganize() {
    local s1="$1"
    local s2="$2"
    local ret=
+   local funcname="$3"
    while [ -n "$s1" -a -n "$s2" ]
    do
       if [ "${s1:0:1}" != "${s2:0:1}" ]
       then # kanji found
          if [[ $kanji -eq 0 ]]; then
-            ret="$ret\\ruby{${s1:0:1}}{${s2:0:1}"
+            ret="$ret\\$funcname{${s1:0:1}}{${s2:0:1}"
             kanji=1
             s1="${s1:1:${#s1}}" # next from kanji/kana
          else
@@ -38,7 +39,7 @@ furiganize() {
       s2="${s2:1:${#s2}}"                       # next from furigana
       [[ $kanji -eq 1 ]] || s1="${s1:1:${#s1}}" # next from kanji/kana
    done
-   [[ $kanji -eq 1 ]] && echo -n "\\ruby{$1}{$2}" || echo -n "$ret" # if kanji is still open,
+   [[ $kanji -eq 1 ]] && echo -n "\\$funcname{$1}{$2}" || echo -n "$ret" # if kanji is still open,
                                                                     # the whole word can be furiganized
 }
 
@@ -170,10 +171,10 @@ main()
          fi
 
          # this word contains kanji, furiganize it
-         [[ $arg1 -eq 1 ]] && furiganize "$i" "$kana"
+         [[ $arg1 -eq 1 ]] && furiganize "$i" "$kana" "rubyT"
          if [[ $arg2 -eq 1 ]]; then
             local stem="$(echo "$i" | _stem)"
-            cache_edic "$stem" "$(furiganize "$i" "$kana")" "$(edic_lookup "$stem" "$kana" 0)"
+            cache_edic "$stem" "$(furiganize "$i" "$kana" "rubyE")" "$(edic_lookup "$stem" "$kana" 0)"
          fi
       done
 
@@ -188,8 +189,8 @@ main()
    # post process dictionary
    if [[ $arg2 -eq 1 ]] && [[ -f "$EDICT_TMP" ]]; then
       echo
-      echo "\\endtext }"
-      echo "{ \\startedict"
+      echo "\\textend }"
+      echo "{ \\edictstart"
       # echo "\\begin{edict}"
       #sort "$EDICT_TMP" | while read -r line; do
       cat "$EDICT_TMP" | while read -r line; do
@@ -199,7 +200,7 @@ main()
       done
       # echo "\\end{edict}"
       echo
-      echo "\\endedict }"
+      echo "\\edictend }"
    fi
 }
 main "$@"
