@@ -127,7 +127,7 @@ main()
          if [[ $arg1 -eq 1 ]]; then # process furigana
             # check for special treatment
             if   [[ "$i" == "$WHITESPACE" ]]; then
-               echo "\\vspace{20mm}\\"
+               echo "\\vspace{20mm}\\\\"
                continue
             elif [[ "$i" == "$NEWLINE" ]]; then
                echo "\\\\\\\\"
@@ -165,7 +165,9 @@ main()
 
    # post process dictionary
    if [[ $arg2 -eq 1 ]] && [[ -f "$EDICT_TMP" ]]; then
+      echo
       echo "\\newpage \\jahori \\noindent"
+      echo "\\renewcommand{\\rubysep}{0.1ex}"
       # echo "\\begin{edict}"
       sort "$EDICT_TMP" | while read line; do
          orig=$(echo $line | awk -F'==' '{ print $2 }')
