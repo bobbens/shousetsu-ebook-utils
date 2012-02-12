@@ -6,7 +6,8 @@ EDICT_TMP="/tmp/edict.jatex"  # Temporary file for word lookups
 WHITESPACE='whitespace'       # Whitespace identifer
 MECABEUCJP=1                  # By default use utf8 mecab, change 1 to eucjp
 IGNORE='*「」。、…”！？　'    # Ignore these in edict lookups
-ESCAPE='*&'                   # Escapes all these characters from input
+ESCAPE='*&^#$%~_{}'           # Escapes all these characters from input
+REMOVE='*'                    # Remove from mecab output
 
 # convert to furigana
 # $1 = kanji/kana
@@ -41,18 +42,32 @@ furiganize() {
                                                                     # the whole word can be furiganized
 }
 
+# remove
+_remove() {
+   while read -r pipe; do
+      echo "$pipe" | sed "s/\([$REMOVE]\)//g"
+   done
+}
+
+# escape
+_escape() {
+   while read -r pipe; do
+      echo "$pipe" | sed -e 's/\\/\\\\/g' -e "s/\([$ESCAPE]\)/\\\&/g"
+   done
+}
+
 # mecab wrapper for utf8 and eucjp mecab
 _mecab() {
    while read -r pipe; do
-      [[ $MECABEUCJP -eq 1 ]] && echo "$pipe" | iconv -f utf8 -t eucjp | mecab | iconv -f eucjp -t utf8 | sed "s/\([$ESCAPE]\)//g"
-      [[ $MECABEUCJP -eq 0 ]] && echo "$pipe" | mecab | sed "s/\([$ESCAPE]\)//g"
+      [[ $MECABEUCJP -eq 1 ]] && echo "$pipe" | iconv -f utf8 -t eucjp | mecab | iconv -f eucjp -t utf8
+      [[ $MECABEUCJP -eq 0 ]] && echo "$pipe" | mecab
    done
 }
 
 # get stem of word
 _stem() {
    while read -r pipe; do
-      echo "$pipe" | _mecab | awk -F',' '{ print $7 }' | sed "s/\([$ESCAPE]\)//g"
+      echo "$pipe" | _mecab | awk -F',' '{ print $7 }' | _remove
    done
 }
 
@@ -66,7 +81,7 @@ _kakasi() {
 # get mecab reading
 _reading() {
    while read -r pipe; do
-      echo "$pipe" | _mecab | awk -F',' '{print $8}' | sed "s/\([$ESCAPE]\)//g"
+      echo "$pipe" | _mecab | awk -F',' '{print $8}' | _remove
    done
 }
 
@@ -106,7 +121,7 @@ edic_lookup() {
 # $3 = Meaning
 cache_edic() {
    [ "$1" ] && [ "$2" ] && [ "$3" ] || return
-   mean="$(echo "$3" | sed -e 's/\//\\slash /g' -e "s/\([$ESCAPE]\)/\\\&/g")"
+   mean="$(echo "$3" | sed -e 's/\//\\slash /g' | _escape)"
    if [[ -f "$EDICT_TMP" ]]; then
       [ "$(grep -w "$1==" "$EDICT_TMP")" ] || echo "$1==$2==$mean" >> "$EDICT_TMP"
    else
@@ -125,9 +140,9 @@ main()
    # [[ $arg1 -eq 1 ]] && echo "\\begin{furigana}"
    OIFS="$IFS"
    IFS='' # preserve whitespace
-   while read pipe; do
+   while read -r pipe; do
       IFS="$OIFS" # reset ifs
-      local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | sed "s/\([$ESCAPE]\)/\\\&/g" | _mecab | awk -F' ' '{ print $1 }')"
+      local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | _escape | _mecab | awk -F' ' '{ print $1 }')"
       for i in $origs; do
          if [[ $arg1 -eq 1 ]]; then # process furigana
             # check for special treatment
