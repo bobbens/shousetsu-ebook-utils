@@ -58,8 +58,6 @@ for FILEPATH in $INDIR/**/*.txt; do
 
    # Copy result over
    cp "$TMPDIR/$FILE.pdf" "$OFILE" || exit
-
-   exit
 done
 
 #rm -r .latex_out
