@@ -188,9 +188,8 @@ main()
    # post process dictionary
    if [[ $arg2 -eq 1 ]] && [[ -f "$EDICT_TMP" ]]; then
       echo
-      echo "\\end{spacing}"
-      echo "\\newpage \\jahori \\noindent"
-      echo "\\renewcommand{\\rubysep}{0.0ex}"
+      echo "\\endtext }"
+      echo "{ \\startedict"
       # echo "\\begin{edict}"
       #sort "$EDICT_TMP" | while read -r line; do
       cat "$EDICT_TMP" | while read -r line; do
@@ -199,6 +198,8 @@ main()
          [ "$orig" ] && [ "$dict" ] && echo "\\edict{$orig}{$dict}"
       done
       # echo "\\end{edict}"
+      echo
+      echo "\\endedict }"
    fi
 }
 main "$@"

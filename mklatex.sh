@@ -65,5 +65,3 @@ for FILEPATH in $INDIR/**/*.txt; do
    cp "$TMPDIR/$FILE.pdf" "$OFILE" || exit
 done
 
-#rm -r .latex_out
-
