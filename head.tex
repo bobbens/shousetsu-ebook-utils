@@ -7,13 +7,15 @@
 \setCJKfamilyfont{IPAvert}[Script=CJK,Vertical=RotatedGlyphs]{IPAGothic} % We want vertical input
 \usepackage[overlap,CJK]{ruby}  % Furigana support
 \renewcommand{\rubysize}{0.5}   % Furigana size
-\renewcommand{\rubysep}{-0.7ex} % Spacing between Furigana and Kanji 
+\renewcommand{\rubysep}{-1.25ex} % Spacing between Furigana and Kanji
 
 % Small macro to have titles.
 \newcommand{\storytitle}[2]{\hspace{20pt}{\large \textbf{#1}} \hspace{20pt}{\textbf{#2}}\\ \\}
 \newcommand{\edict}[2]{{\large \textbf {#1}: } {#2} \\}
 \newcommand{\javert}{\CJKfamily{IPAvert}}
 \newcommand{\jahori}{\CJKfamily{IPAhori}}
+
+\usepackage{setspace}
 
 %\frenchspacing
 \sloppy
@@ -23,4 +25,5 @@
 
 % some macros to make CJK vertical more painless
 {\javert \noindent
+\begin{spacing}{1.3}
 

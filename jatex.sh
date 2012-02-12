@@ -3,8 +3,7 @@
 
 EDICT="."                     # Edict dictionary folder
 EDICT_TMP="/tmp/edict.jatex"  # Temporary file for word lookups
-WHITESPACE='[:wh:]'           # Whitespace identifer
-NEWLINE='[:nl:]'              # Newline identifer
+WHITESPACE='whitespace'       # Whitespace identifer
 MECABEUCJP=1                  # By default use utf8 mecab, change 1 to eucjp
 IGNORE='*「」。、…”！？　'    # Ignore these in edict lookups
 
@@ -37,13 +36,13 @@ furiganize() {
       s2="${s2:1:${#s2}}"                       # next from furigana
       [[ $kanji -eq 1 ]] || s1="${s1:1:${#s1}}" # next from kanji/kana
    done
-   [[ $kanji -eq 1 ]] && echo -n "\\ruby{$1}{$2}" || echo -n $ret # if kanji is still open,
-                                                                  # the whole word can be furiganized
+   [[ $kanji -eq 1 ]] && echo -n "\\ruby{$1}{$2}" || echo -n "$ret" # if kanji is still open,
+                                                                    # the whole word can be furiganized
 }
 
 # mecab wrapper for utf8 and eucjp mecab
 _mecab() {
-   while read pipe; do
+   while read -r pipe; do
       [[ $MECABEUCJP -eq 1 ]] && echo "$pipe" | iconv -f utf8 -t eucjp | mecab | iconv -f eucjp -t utf8
       [[ $MECABEUCJP -eq 0 ]] && echo "$pipe" | mecab
    done
@@ -51,21 +50,21 @@ _mecab() {
 
 # get stem of word
 _stem() {
-   while read pipe; do
+   while read -r pipe; do
       echo "$pipe" | _mecab | awk -F',' '{ print $7 }'
    done
 }
 
 # duplicate _mecab code to save iconv calls on eucjp mode
 _kakasi() {
-   while read pipe; do
+   while read -r pipe; do
       echo "$pipe" | iconv -f utf8 -t eucjp | kakasi -i euc -KH | iconv -f eucjp -t utf8
    done
 }
 
 # get mecab reading
 _reading() {
-   while read pipe; do
+   while read -r pipe; do
       echo "$pipe" | _mecab | awk -F',' '{print $8}'
    done
 }
@@ -97,7 +96,7 @@ edic_lookup() {
    [ "$look" ] || return # not good 'word'
    local edic=$(grep "^$1 " "$EDICT/edict2.utf")
    [[ -z $edic ]] && [[ $3 -eq 0 ]] && edic=$(parse_edict "$1" "$2")
-   edic=$(echo "$edic" | sed 's|[^/]*/||;s|/[^/]*/$||;q')
+   edic="$(echo "$edic" | sed -e 's|[^/]*/||;s|/[^/]*/$||;q')"
    [ "$edic" ] && echo "$edic"
 }
 
@@ -106,10 +105,11 @@ edic_lookup() {
 # $3 = Meaning
 cache_edic() {
    [ "$1" ] && [ "$2" ] && [ "$3" ] || return
+   mean="$(echo "$3" | sed 's/\//\\slash /g')"
    if [[ -f "$EDICT_TMP" ]]; then
-      [ "$(grep -w "$1==" "$EDICT_TMP")" ] || echo "$1==$2==$3" >> "$EDICT_TMP"
+      [ "$(grep -w "$1==" "$EDICT_TMP")" ] || echo "$1==$2==$mean" >> "$EDICT_TMP"
    else
-      echo "$1==$2==$3" >> "$EDICT_TMP"
+      echo "$1==$2==$mean" >> "$EDICT_TMP"
    fi
 }
 
@@ -121,16 +121,16 @@ main()
    [[ -f "$EDICT_TMP" ]] && rm "$EDICT_TMP"
 
    # [[ $arg1 -eq 1 ]] && echo "\\begin{furigana}"
+   OIFS="$IFS"
+   IFS='' # preserve whitespace
    while read pipe; do
-      local origs=$(echo "$pipe" | sed -e "s/ / $WHITESPACE /g" -e "s/\n/ $NEWLINE /g" | _mecab | awk -F' ' '{print $1}')
+      IFS="$OIFS" # reset ifs
+      local origs="$(echo "$pipe" | sed -e "s/ / $WHITESPACE /g" | _mecab | awk -F' ' '{print $1}')"
       for i in $origs; do
          if [[ $arg1 -eq 1 ]]; then # process furigana
             # check for special treatment
             if   [[ "$i" == "$WHITESPACE" ]]; then
-               echo "\\vspace{20mm}\\\\"
-               continue
-            elif [[ "$i" == "$NEWLINE" ]]; then
-               echo "\\\\\\\\"
+               # echo -n "\hspace{20mm}"
                continue
             elif [[ "$i" == "EOS" ]]; then
                continue
@@ -153,25 +153,30 @@ main()
          fi
 
          # this word contains kanji, furiganize it
-         furigana="$(furiganize "$i" "$kana")"
-         [[ $arg1 -eq 1 ]] && echo -n "$furigana"
+         [[ $arg1 -eq 1 ]] && furiganize "$i" "$kana"
          if [[ $arg2 -eq 1 ]]; then
             local stem="$(echo "$i" | _stem)"
-            cache_edic "$stem" "\\$furigana" "$(edic_lookup "$stem" "$kana" 0)"
+            cache_edic "$stem" "$(furiganize "$i" "$kana")" "$(edic_lookup "$stem" "$kana" 0)"
          fi
       done
+
+      # every read ends in newline, so add your newline stuff here
+
+      # reset IFS for read
+      IFS=''
    done
    # [[ $arg1 -eq 1 ]] && echo "\\end{furigana}"
 
    # post process dictionary
    if [[ $arg2 -eq 1 ]] && [[ -f "$EDICT_TMP" ]]; then
       echo
+      echo "\\end{spacing}"
       echo "\\newpage \\jahori \\noindent"
-      echo "\\renewcommand{\\rubysep}{0.1ex}"
+      echo "\\renewcommand{\\rubysep}{0.0ex}"
       # echo "\\begin{edict}"
-      sort "$EDICT_TMP" | while read line; do
-         orig=$(echo $line | awk -F'==' '{ print $2 }')
-         dict=$(echo $line | awk -F'==' '{ print $3 }')
+      sort "$EDICT_TMP" | while read -r line; do
+         orig="$(echo "$line" | awk -F'==' '{ print $2 }')"
+         dict="$(echo "$line" | awk -F'==' '{ print $3 }')"
          [ "$orig" ] && [ "$dict" ] && echo "\\edict{$orig}{$dict}"
       done
       # echo "\\end{edict}"
