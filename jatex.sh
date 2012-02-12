@@ -105,7 +105,7 @@ edic_lookup() {
 # $3 = Meaning
 cache_edic() {
    [ "$1" ] && [ "$2" ] && [ "$3" ] || return
-   mean="$(echo "$3" | sed 's/\//\\slash /g')"
+   mean="$(echo "$3" | sed -e 's/\//\\slash /g' -e 's/&/\\&/g')"
    if [[ -f "$EDICT_TMP" ]]; then
       [ "$(grep -w "$1==" "$EDICT_TMP")" ] || echo "$1==$2==$mean" >> "$EDICT_TMP"
    else
