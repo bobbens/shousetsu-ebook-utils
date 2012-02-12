@@ -30,7 +30,8 @@ for FILEPATH in $INDIR/**/*.txt; do
    # Working files
    TTEXT="$TMPDIR/$FILE.txt"
    TFILE="$TMPDIR/$FILE.tex"
-   OFILE="$OUTDIR/$FILE.pdf"
+   OFILE="$OUTDIR/${FILEPATH#$INDIR/}"
+   OFILE="${OFILE%.txt}.pdf"
 
    # If already created avoid recreation
    test -f "$OFILE" && continue
@@ -57,6 +58,7 @@ for FILEPATH in $INDIR/**/*.txt; do
    echo " $((TEND-TSTART)) sec"
 
    # Copy result over
+
    cp "$TMPDIR/$FILE.pdf" "$OFILE" || exit
 done
 
