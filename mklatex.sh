@@ -37,7 +37,10 @@ for FILEPATH in $INDIR/**/*.txt; do
    # If already created avoid recreation
    test -f "$OFILE" && continue
 
+   # More temp stuff
    OTITLE="$TMPDIR/title"
+   OBASE=`dirname $OFILE`
+   test -d "$OBASE" || mkdir -p "$OBASE"
 
    # Begin processing
    echo "Processing $AUTHOR - $TITLE"
@@ -59,7 +62,6 @@ for FILEPATH in $INDIR/**/*.txt; do
    echo " $((TEND-TSTART)) sec"
 
    # Copy result over
-
    cp "$TMPDIR/$FILE.pdf" "$OFILE" || exit
 done
 
