@@ -6,6 +6,7 @@ EDICT_TMP="/tmp/edict.jatex"  # Temporary file for word lookups
 WHITESPACE='whitespace'       # Whitespace identifer
 MECABEUCJP=1                  # By default use utf8 mecab, change 1 to eucjp
 IGNORE='*「」。、…”！？　'    # Ignore these in edict lookups
+ESCAPE='*&'                   # Escapes all these characters from input
 
 # convert to furigana
 # $1 = kanji/kana
@@ -105,7 +106,7 @@ edic_lookup() {
 # $3 = Meaning
 cache_edic() {
    [ "$1" ] && [ "$2" ] && [ "$3" ] || return
-   mean="$(echo "$3" | sed -e 's/\//\\slash /g' -e 's/&/\\&/g')"
+   mean="$(echo "$3" | sed -e 's/\//\\slash /g')"
    if [[ -f "$EDICT_TMP" ]]; then
       [ "$(grep -w "$1==" "$EDICT_TMP")" ] || echo "$1==$2==$mean" >> "$EDICT_TMP"
    else
@@ -118,6 +119,7 @@ main()
    arg1=${1-1} # process furigana
    arg2=${2-1} # process edict
    arg3=${3-1} # process katakana edict
+   MECABEUCJP=${4-1} # eucjp encoding? default == yes
    [[ -f "$EDICT_TMP" ]] && rm "$EDICT_TMP"
 
    # [[ $arg1 -eq 1 ]] && echo "\\begin{furigana}"
@@ -125,7 +127,7 @@ main()
    IFS='' # preserve whitespace
    while read pipe; do
       IFS="$OIFS" # reset ifs
-      local origs="$(echo "$pipe" | sed -e "s/ / $WHITESPACE /g" | _mecab | awk -F' ' '{print $1}')"
+      local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | sed "s/\([$ESCAPE]\)/\\\&/g" | _mecab | awk -F' ' '{print $1}')"
       for i in $origs; do
          if [[ $arg1 -eq 1 ]]; then # process furigana
             # check for special treatment
