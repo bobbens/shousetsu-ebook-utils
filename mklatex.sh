@@ -26,6 +26,7 @@ for FILEPATH in $INDIR/**/*.txt; do
    FILE=${FILE//[()]}
    AUTHOR=${FILE%-*}
    TITLE=${FILE#*-}
+   EUCJP=${1-1}
 
    # Working files
    TTEXT="$TMPDIR/$FILE.txt"
@@ -45,7 +46,7 @@ for FILEPATH in $INDIR/**/*.txt; do
    echo -n "   Generated TEX..."
    TSTART=$SECONDS
    echo "\storytitle{$TITLE}{$AUTHOR}" > "$OTITLE"
-   cat "$FILEPATH" | sh jatex.sh $FURIGANA $DICTIONARY $KATAKANA > "$TTEXT"
+   cat "$FILEPATH" | sh jatex.sh $FURIGANA $DICTIONARY $KATAKANA $EUCJP > "$TTEXT"
    cat "$LATHEAD" "$OTITLE" "$TTEXT" "$LATTAIL" > "$TFILE"
    TEND=$SECONDS
    echo " $((TEND-TSTART)) sec"
