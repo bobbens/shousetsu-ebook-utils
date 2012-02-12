@@ -44,15 +44,15 @@ furiganize() {
 # mecab wrapper for utf8 and eucjp mecab
 _mecab() {
    while read -r pipe; do
-      [[ $MECABEUCJP -eq 1 ]] && echo "$pipe" | iconv -f utf8 -t eucjp | mecab | iconv -f eucjp -t utf8
-      [[ $MECABEUCJP -eq 0 ]] && echo "$pipe" | mecab
+      [[ $MECABEUCJP -eq 1 ]] && echo "$pipe" | iconv -f utf8 -t eucjp | mecab | iconv -f eucjp -t utf8 | sed "s/\([$ESCAPE]\)//g"
+      [[ $MECABEUCJP -eq 0 ]] && echo "$pipe" | mecab | sed "s/\([$ESCAPE]\)//g"
    done
 }
 
 # get stem of word
 _stem() {
    while read -r pipe; do
-      echo "$pipe" | _mecab | awk -F',' '{ print $7 }'
+      echo "$pipe" | _mecab | awk -F',' '{ print $7 }' | sed "s/\([$ESCAPE]\)//g"
    done
 }
 
@@ -66,7 +66,7 @@ _kakasi() {
 # get mecab reading
 _reading() {
    while read -r pipe; do
-      echo "$pipe" | _mecab | awk -F',' '{print $8}'
+      echo "$pipe" | _mecab | awk -F',' '{print $8}' | sed "s/\([$ESCAPE]\)//g"
    done
 }
 
@@ -106,7 +106,7 @@ edic_lookup() {
 # $3 = Meaning
 cache_edic() {
    [ "$1" ] && [ "$2" ] && [ "$3" ] || return
-   mean="$(echo "$3" | sed -e 's/\//\\slash /g')"
+   mean="$(echo "$3" | sed -e 's/\//\\slash /g' -e "s/\([$ESCAPE]\)/\\\&/g")"
    if [[ -f "$EDICT_TMP" ]]; then
       [ "$(grep -w "$1==" "$EDICT_TMP")" ] || echo "$1==$2==$mean" >> "$EDICT_TMP"
    else
@@ -119,7 +119,7 @@ main()
    arg1=${1-1} # process furigana
    arg2=${2-1} # process edict
    arg3=${3-1} # process katakana edict
-   MECABEUCJP=${4-1} # eucjp encoding? default == yes
+   MECABEUCJP=${4-$MECABEUCJP} # eucjp encoding? default == yes
    [[ -f "$EDICT_TMP" ]] && rm "$EDICT_TMP"
 
    # [[ $arg1 -eq 1 ]] && echo "\\begin{furigana}"
@@ -127,7 +127,7 @@ main()
    IFS='' # preserve whitespace
    while read pipe; do
       IFS="$OIFS" # reset ifs
-      local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | sed "s/\([$ESCAPE]\)/\\\&/g" | _mecab | awk -F' ' '{print $1}')"
+      local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | sed "s/\([$ESCAPE]\)/\\\&/g" | _mecab | awk -F' ' '{ print $1 }')"
       for i in $origs; do
          if [[ $arg1 -eq 1 ]]; then # process furigana
             # check for special treatment
