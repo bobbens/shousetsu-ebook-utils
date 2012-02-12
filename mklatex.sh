@@ -41,14 +41,20 @@ for FILEPATH in $INDIR/**/*.txt; do
    echo "Processing $AUTHOR - $TITLE"
 
    # Generate the tex
-   echo "   Generated TEX..."
+   echo -n "   Generated TEX..."
+   TSTART=$SECONDS
    echo "\storytitle{$TITLE}{$AUTHOR}" > "$OTITLE"
    cat "$FILEPATH" | sh jatex.sh $FURIGANA $DICTIONARY $KATAKANA > "$TTEXT"
    cat "$LATHEAD" "$OTITLE" "$TTEXT" "$LATTAIL" > "$TFILE"
+   TEND=$SECONDS
+   echo " $((TEND-TSTART)) sec"
 
    # Generate the pdf
-   echo "   Generating PDF..."
+   echo -n "   Generating PDF..."
+   TSTART=$SECONDS
    (cd "$TMPDIR"; xelatex "$FILE" > /dev/null)
+   TEND=$SECONDS
+   echo " $((TEND-TSTART)) sec"
 
    # Copy result over
    cp "$TMPDIR/$FILE.pdf" "$OFILE" || exit

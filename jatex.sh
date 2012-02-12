@@ -175,7 +175,8 @@ main()
       echo "\\newpage \\jahori \\noindent"
       echo "\\renewcommand{\\rubysep}{0.0ex}"
       # echo "\\begin{edict}"
-      sort "$EDICT_TMP" | while read -r line; do
+      #sort "$EDICT_TMP" | while read -r line; do
+      cat "$EDICT_TMP" | while read -r line; do
          orig="$(echo "$line" | awk -F'==' '{ print $2 }')"
          dict="$(echo "$line" | awk -F'==' '{ print $3 }')"
          [ "$orig" ] && [ "$dict" ] && echo "\\edict{$orig}{$dict}"
