@@ -1,5 +1,10 @@
 #!/usr/bin/env zsh
 
+# Options
+FURIGANA=1 # Generate furigana for text, 0 is disable, 1 is enable.
+DICTIONARY=1 # Generate dictionary at the end of the text. 0 is disable, 1 is enable.
+KATAKANA=1 # Include katakana in the dictionary. 0 is disable, 1 is enable.
+
 # Directory paths
 INDIR=scrape_data
 TMPDIR=.latex_out
@@ -23,6 +28,7 @@ for FILEPATH in $INDIR/**/*.txt; do
    TITLE=${FILE#*-}
 
    # Working files
+   TTEXT="$TMPDIR/$FILE.txt"
    TFILE="$TMPDIR/$FILE.tex"
    OFILE="$OUTDIR/$FILE.pdf"
 
@@ -31,14 +37,23 @@ for FILEPATH in $INDIR/**/*.txt; do
 
    OTITLE="$TMPDIR/title"
 
-   # Generate the pdf
-   echo "Generating PDF for $AUTHOR - $TITLE"
+   # Begin processing
+   echo "Processing $AUTHOR - $TITLE"
+
+   # Generate the tex
+   echo "   Generated TEX..."
    echo "\storytitle{$TITLE}{$AUTHOR}" > "$OTITLE"
-   cat "$LATHEAD" "$OTITLE" "$FILEPATH" "$LATTAIL" > "$TFILE"
+   cat "$FILEPATH" | sh jatex.sh $FURIGANA $DICTIONARY $KATAKANA > "$TTEXT"
+   cat "$LATHEAD" "$OTITLE" "$TTEXT" "$LATTAIL" > "$TFILE"
+
+   # Generate the pdf
+   echo "   Generating PDF..."
    (cd "$TMPDIR"; xelatex "$FILE" > /dev/null)
 
    # Copy result over
    cp "$TMPDIR/$FILE.pdf" "$OFILE" || exit
+
+   exit
 done
 
 #rm -r .latex_out
