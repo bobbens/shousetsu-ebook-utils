@@ -130,7 +130,7 @@ main()
          if [[ $arg1 -eq 1 ]]; then # process furigana
             # check for special treatment
             if   [[ "$i" == "$WHITESPACE" ]]; then
-               # echo -n "\hspace{20mm}"
+               #echo "\\jalinebreak"
                continue
             elif [[ "$i" == "EOS" ]]; then
                continue
@@ -161,6 +161,7 @@ main()
       done
 
       # every read ends in newline, so add your newline stuff here
+      echo "\\janewline"
 
       # reset IFS for read
       IFS=''
