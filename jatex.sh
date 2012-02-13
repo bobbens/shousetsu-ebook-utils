@@ -60,7 +60,7 @@ furiganize() {
       fi
       s2="${s2:1:${#s2}}"                       # next from furigana
       [[ $kanji -eq 0 ]] && s1="${s1:1:${#s1}}" # next from kanji/kana
-      [[ $kanji -eq 1 ]] && [[ $(jchr $s1) -eq 0 ]] && ret="$ret}" && kanji=0 # if next letter is kanji as well, then fsck this..
+      [[ $kanji -eq 1 ]] && [[ $(jchr ${s1:0:1}) -eq 0 ]] && ret="$ret}" && kanji=0 # if next letter is kanji as well, then fsck this..
    done
    [[ $kanji -eq 1 ]] && echo -n "\\ruby{$1}{$2}" || echo -n "$ret" # if kanji is still open,
                                                                     # the whole word can be furiganized
