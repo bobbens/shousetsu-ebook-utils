@@ -146,12 +146,11 @@ parse_edict() {
 
 # $1 = Lookup word [stem]
 # $2 = Kana
-# $3 = Giveup on first try?
 edic_lookup() {
    local look="$(echo $1 | sed "s/[$IGNORE]//g")"
    [ "$look" ] || return # not good 'word'
    local edic=$(grep "^$1 " "$EDICT/edict2.utf")
-   [[ -z $edic ]] && [[ $3 -eq 0 ]] && edic=$(parse_edict "$1" "$2")
+   [[ -z $edic ]] && edic=$(parse_edict "$1" "$2")
    edic="$(echo "$edic" | sed -e 's|[^/]*/||;s|/[^/]*/$||;q')"
    [ "$edic" ] && echo "$edic"
 }
@@ -200,7 +199,8 @@ main()
          reading=$(echo "$i" | _reading)
          if [[ "$i" == "$reading" ]] || [[ ! "$reading" ]]; then
             [[ $arg1 -eq 1 ]] && echo -n "$i"
-            [[ $arg3 -eq 1 ]] && [ "$reading" ] && [ ! "$(check_cache "$i")" ] && cache_edic "$i" "$i" "$(edic_lookup "$i" "$reading" 0)"
+            [[ $arg3 -eq 1 ]] && [ "$reading" ] && [ ! "$(check_cache "$i")" ] && \
+                              cache_edic "$i" "$i" "$(edic_lookup "$i" "$reading")"
             continue
          fi
 
@@ -217,7 +217,7 @@ main()
             local stem="$(echo "$i" | _stem)"
             if [ ! "$(check_cache "$stem")" ]; then
                local stemkana="$(echo "$stem" | _reading | _kakasi)"
-               cache_edic "$stem" "$(furiganize "$stem" "$stemkana")" "$(edic_lookup "$stem" "$stemkana" 0)"
+               cache_edic "$stem" "$(furiganize "$stem" "$stemkana")" "$(edic_lookup "$stem" "$stemkana")"
             fi
          fi
       done
