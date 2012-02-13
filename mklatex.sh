@@ -3,8 +3,8 @@
 # Options
 FURIGANA=1 # Generate furigana for text, 0 is disable, 1 is enable.
 DICTIONARY=1 # Generate dictionary at the end of the text. 0 is disable, 1 is enable.
-HIRAGANA=1 # Include hiragana in the dictionary. 0 is disable, 1 is enable.
-KATAKANA=1 # Include katakana in the dictionary. 0 is disable, 1 is enable.
+HIRAGANA=1 # Include hiragana words in the dictionary. 0 is disable, 1 is enable.
+KATAKANA=1 # Include katakana words in the dictionary. 0 is disable, 1 is enable.
 
 # Directory paths
 INDIR=scrape_data
