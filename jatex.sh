@@ -117,16 +117,18 @@ edic_lookup() {
 }
 
 # $1 = Stem
+check_cache() {
+   [[ -f "$EDICT_TMP" ]] || return
+   grep -w "$1==" "$EDICT_TMP"
+}
+
+# $1 = Stem
 # $2 = Word
 # $3 = Meaning
 cache_edic() {
    [ "$1" ] && [ "$2" ] && [ "$3" ] || return
    mean="$(echo "$3" | _escape | sed -e 's/\//\\slash /g')"
-   if [[ -f "$EDICT_TMP" ]]; then
-      [ "$(grep -w "$1==" "$EDICT_TMP")" ] || echo "$1==$2==$mean" >> "$EDICT_TMP"
-   else
-      echo "$1==$2==$mean" >> "$EDICT_TMP"
-   fi
+   echo "$1==$2==$mean" >> "$EDICT_TMP"
 }
 
 main()
@@ -158,7 +160,7 @@ main()
          reading=$(echo "$i" | _reading)
          if [[ "$i" == "$reading" ]] || [[ ! "$reading" ]]; then
             [[ $arg1 -eq 1 ]] && echo -n "$i"
-            [ "$reading" ] && [[ $arg3 -eq 1 ]] && cache_edic "$i" "$i" "$(edic_lookup "$i" "$reading" 0)"
+            [[ $arg3 -eq 1 ]] && [ "$reading" ] && [ ! "$(check_cache "$i")" ] && cache_edic "$i" "$i" "$(edic_lookup "$i" "$reading" 0)"
             continue
          fi
 
@@ -173,7 +175,7 @@ main()
          [[ $arg1 -eq 1 ]] && furiganize "$i" "$kana"
          if [[ $arg2 -eq 1 ]]; then
             local stem="$(echo "$i" | _stem)"
-            cache_edic "$stem" "$(furiganize "$stem" "$kana")" "$(edic_lookup "$stem" "$kana" 0)"
+            [ ! "$(check_cache "$stem")" ] && cache_edic "$stem" "$(furiganize "$stem" "$kana")" "$(edic_lookup "$stem" "$kana" 0)"
          fi
       done
 
