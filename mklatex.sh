@@ -44,9 +44,6 @@ for FILEPATH in $INDIR/**/*.txt; do
    OBASE=`dirname $OFILE`
    test -d "$OBASE" || mkdir -p "$OBASE"
 
-   echo "(cd "$TMPDIR"; xelatex "`basename $TFILE`" > /dev/null)"
-   exit
-
    # Begin processing
    echo "Processing $AUTHOR - $TITLE"
 
