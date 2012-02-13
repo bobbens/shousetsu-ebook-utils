@@ -217,7 +217,7 @@ main()
             local stem="$(echo "$i" | _stem)"
             if [ ! "$(check_cache "$stem")" ]; then
                local stemkana="$(echo "$stem" | _reading | _kakasi)"
-               cache_edic "$stem" "$(furiganize "$stem" "$stemkana")" "$(edic_lookup "$stem" "$kana" 0)"
+               cache_edic "$stem" "$(furiganize "$stem" "$stemkana")" "$(edic_lookup "$stem" "$stemkana" 0)"
             fi
          fi
       done
