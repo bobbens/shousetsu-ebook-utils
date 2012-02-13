@@ -232,6 +232,7 @@ main()
             [[ $arg1 -eq 1 ]] && echo -n "$i"
             if [[ $arg3 -eq 1 ]] && [ "$kana" ]; then
                local stem="$(echo "$i" | _stem)"
+               [ "$(check_cache "$stem")" ] && continue
                [[ $(_filter "$stem" "$(echo $stem | _type)") -eq 1 ]] && continue # filter
                local stemkana="$(echo "$stem" | _reading | _kakasi)"
                cache_edic "$stem" "$stem" "$(edic_lookup "$stem" "$stemkana")"
