@@ -1,5 +1,13 @@
 #!/bin/sh
 # JA -> latex
+#
+# Please read before getting brain cancer from the script!
+#     This script does many things wrong and is the worst example
+#     how things should be done. Furiganizer basically guesses the
+#     furigana, and we do lots of piping && extrenal lookups.
+#
+#     Script is slow as hell, so do bare with me until I rewrite
+#     it more properly on something more suited and more effective language.
 
 EDICT="."                     # Edict dictionary folder
 EDICT_TMP="/tmp/edict.jatex"  # Temporary file for word lookups
@@ -8,8 +16,23 @@ MECABEUCJP=1                  # By default use utf8 mecab, change 1 to eucjp
 IGNORE='*「」。、…”！？　'    # Ignore these in edict lookups
 ESCAPE='*&^#$%~_{}'           # Escapes all these characters from input
 REMOVE='*'                    # Remove from mecab output
+REPLACE='!?'                  # Replace these...
+SUBSTITUTE='！？'             # ...with these
 
-# convert to furigana
+# check character type
+# 0 = kanji
+# 1 = hiragana
+# 2 = katakana
+jchr()
+{
+   local char=$(printf "%d" \'$@)
+   [ $char -gt 19967 ] && [ $char -lt 40896 ] && echo 0 && return
+   [ $char -gt 12351 ] && [ $char -lt 12448 ] && echo 1 && return
+   [ $char -gt 12447 ] && [ $char -lt 12544 ] && echo 2 && return
+   echo -1
+}
+
+# convert to furigana [ don't try this at home ]
 # $1 = kanji/kana
 # $2 = furigana
 furiganize() {
@@ -37,7 +60,8 @@ furiganize() {
          ret="$ret${s1:0:1}"
       fi
       s2="${s2:1:${#s2}}"                       # next from furigana
-      [[ $kanji -eq 1 ]] || s1="${s1:1:${#s1}}" # next from kanji/kana
+      [[ $kanji -eq 0 ]] && s1="${s1:1:${#s1}}" # next from kanji/kana
+      [[ $kanji -eq 1 ]] && [[ $(jchr $s1) -eq 0 ]] && ret="$ret}" && kanji=0 # if next letter is kanji as well, then fsck this..
    done
    [[ $kanji -eq 1 ]] && echo -n "\\$funcname{$1}{$2}" || echo -n "$ret" # if kanji is still open,
                                                                     # the whole word can be furiganized
@@ -54,6 +78,22 @@ _remove() {
 _escape() {
    while read -r pipe; do
       echo "$pipe" | sed -e 's/\\/\\\\/g' -e "s/\([$ESCAPE]\)/\\\&/g"
+   done
+}
+
+# replace
+_replace() {
+   while read -r pipe; do
+      local s1="$REPLACE"
+      local s2="$SUBSTITUTE"
+      local ret="$pipe"
+      while [ -n "$s1" -a -n "$s2" ]
+      do
+         ret="$(echo "$ret" | sed "s/${s1:0:1}/${s2:0:1}/g")"
+         s1="${s1:1:${#s1}}"
+         s2="${s2:1:${#s2}}"
+      done
+      echo "$ret"
    done
 }
 
@@ -107,14 +147,19 @@ parse_edict() {
 
 # $1 = Lookup word [stem]
 # $2 = Kana
-# $3 = Giveup on first try?
 edic_lookup() {
    local look="$(echo $1 | sed "s/[$IGNORE]//g")"
    [ "$look" ] || return # not good 'word'
    local edic=$(grep "^$1 " "$EDICT/edict2.utf")
-   [[ -z $edic ]] && [[ $3 -eq 0 ]] && edic=$(parse_edict "$1" "$2")
+   [[ -z $edic ]] && edic=$(parse_edict "$1" "$2")
    edic="$(echo "$edic" | sed -e 's|[^/]*/||;s|/[^/]*/$||;q')"
    [ "$edic" ] && echo "$edic"
+}
+
+# $1 = Stem
+check_cache() {
+   [[ -f "$EDICT_TMP" ]] || return
+   grep -w "$1==" "$EDICT_TMP"
 }
 
 # $1 = Stem
@@ -123,11 +168,7 @@ edic_lookup() {
 cache_edic() {
    [ "$1" ] && [ "$2" ] && [ "$3" ] || return
    mean="$(echo "$3" | _escape | sed -e 's/\//\\slash /g')"
-   if [[ -f "$EDICT_TMP" ]]; then
-      [ "$(grep -w "$1==" "$EDICT_TMP")" ] || echo "$1==$2==$mean" >> "$EDICT_TMP"
-   else
-      echo "$1==$2==$mean" >> "$EDICT_TMP"
-   fi
+   echo "$1==$2==$mean" >> "$EDICT_TMP"
 }
 
 main()
@@ -143,7 +184,7 @@ main()
    IFS='' # preserve whitespace
    while read -r pipe; do
       IFS="$OIFS" # reset ifs
-      local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | _escape | _mecab | awk -F' ' '{ print $1 }')"
+      local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | _replace | _escape | _mecab | awk -F' ' '{ print $1 }')"
       for i in $origs; do
          if [[ $arg1 -eq 1 ]]; then # process furigana
             # check for special treatment
@@ -159,7 +200,8 @@ main()
          reading=$(echo "$i" | _reading)
          if [[ "$i" == "$reading" ]] || [[ ! "$reading" ]]; then
             [[ $arg1 -eq 1 ]] && echo -n "$i"
-            [ "$reading" ] && [[ $arg3 -eq 1 ]] && cache_edic "$i" "$i" "$(edic_lookup "$i" "$reading" 0)"
+            [[ $arg3 -eq 1 ]] && [ "$reading" ] && [ ! "$(check_cache "$i")" ] && \
+                              cache_edic "$i" "$i" "$(edic_lookup "$i" "$reading")"
             continue
          fi
 
@@ -174,7 +216,10 @@ main()
          [[ $arg1 -eq 1 ]] && furiganize "$i" "$kana" "rubyT"
          if [[ $arg2 -eq 1 ]]; then
             local stem="$(echo "$i" | _stem)"
-            cache_edic "$stem" "$(furiganize "$i" "$kana" "rubyE")" "$(edic_lookup "$stem" "$kana" 0)"
+            if [ ! "$(check_cache "$stem")" ]; then
+               local stemkana="$(echo "$stem" | _reading | _kakasi)"
+               cache_edic "$stem" "$(furiganize "$stem" "$stemkana" "rubyE")" "$(edic_lookup "$stem" "$stemkana")"
+            fi
          fi
       done
 
