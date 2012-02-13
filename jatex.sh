@@ -1,5 +1,13 @@
 #!/bin/sh
 # JA -> latex
+#
+# Please read before getting brain cancer from the script!
+#     This script does many things wrong and is the worst example
+#     how things should be done. Furiganizer basically guesses the
+#     furigana, and we do lots of piping && extrenal lookups.
+#
+#     Script is slow as hell, so do bare with me until I rewrite
+#     it more properly on something more suited and more effective language.
 
 EDICT="."                     # Edict dictionary folder
 EDICT_TMP="/tmp/edict.jatex"  # Temporary file for word lookups
@@ -24,7 +32,7 @@ jchr()
    echo -1
 }
 
-# convert to furigana
+# convert to furigana [ don't try this at home ]
 # $1 = kanji/kana
 # $2 = furigana
 furiganize() {
