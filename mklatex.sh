@@ -31,16 +31,21 @@ for FILEPATH in $INDIR/**/*.txt; do
    # Working files
    TTEXT="$TMPDIR/$FILE.txt"
    TFILE="$TMPDIR/$FILE.tex"
+   TFILE=`echo "$TFILE" | sed 's/ //g'`
    OFILE="$OUTDIR/${FILEPATH#$INDIR/}"
    OFILE="${OFILE%.txt}.pdf"
 
    # If already created avoid recreation
    test -f "$OFILE" && continue
 
+
    # More temp stuff
    OTITLE="$TMPDIR/title"
    OBASE=`dirname $OFILE`
    test -d "$OBASE" || mkdir -p "$OBASE"
+
+   echo "(cd "$TMPDIR"; xelatex "`basename $TFILE`" > /dev/null)"
+   exit
 
    # Begin processing
    echo "Processing $AUTHOR - $TITLE"
@@ -57,7 +62,7 @@ for FILEPATH in $INDIR/**/*.txt; do
    # Generate the pdf
    echo -n "   Generating PDF..."
    TSTART=$SECONDS
-   (cd "$TMPDIR"; xelatex "$FILE" > /dev/null)
+   (cd "$TMPDIR"; xelatex "`basename $TFILE`" > /dev/null)
    TEND=$SECONDS
    echo " $((TEND-TSTART)) sec"
 
