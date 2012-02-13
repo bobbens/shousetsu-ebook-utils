@@ -8,6 +8,8 @@ MECABEUCJP=1                  # By default use utf8 mecab, change 1 to eucjp
 IGNORE='*「」。、…”！？　'    # Ignore these in edict lookups
 ESCAPE='*&^#$%~_{}'           # Escapes all these characters from input
 REMOVE='*'                    # Remove from mecab output
+REPLACE='!?'                  # Replace these...
+SUBSTITUTE='！？'             # ...with these
 
 # check character type
 # 0 = kanji
@@ -67,6 +69,22 @@ _remove() {
 _escape() {
    while read -r pipe; do
       echo "$pipe" | sed -e 's/\\/\\\\/g' -e "s/\([$ESCAPE]\)/\\\&/g"
+   done
+}
+
+# replace
+_replace() {
+   while read -r pipe; do
+      local s1="$REPLACE"
+      local s2="$SUBSTITUTE"
+      local ret="$pipe"
+      while [ -n "$s1" -a -n "$s2" ]
+      do
+         ret="$(echo "$ret" | sed "s/${s1:0:1}/${s2:0:1}/g")"
+         s1="${s1:1:${#s1}}"
+         s2="${s2:1:${#s2}}"
+      done
+      echo "$ret"
    done
 }
 
@@ -158,7 +176,7 @@ main()
    IFS='' # preserve whitespace
    while read -r pipe; do
       IFS="$OIFS" # reset ifs
-      local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | _escape | _mecab | awk -F' ' '{ print $1 }')"
+      local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | _replace | _escape | _mecab | awk -F' ' '{ print $1 }')"
       for i in $origs; do
          if [[ $arg1 -eq 1 ]]; then # process furigana
             # check for special treatment
