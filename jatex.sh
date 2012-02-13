@@ -175,7 +175,10 @@ main()
          [[ $arg1 -eq 1 ]] && furiganize "$i" "$kana"
          if [[ $arg2 -eq 1 ]]; then
             local stem="$(echo "$i" | _stem)"
-            [ ! "$(check_cache "$stem")" ] && cache_edic "$stem" "$(furiganize "$stem" "$kana")" "$(edic_lookup "$stem" "$kana" 0)"
+            if [ ! "$(check_cache "$stem")" ]; then
+               local stemkana="$(echo "$stem" | _reading | _kakasi)"
+               cache_edic "$stem" "$(furiganize "$stem" "$stemkana")" "$(edic_lookup "$stem" "$kana" 0)"
+            fi
          fi
       done
 
