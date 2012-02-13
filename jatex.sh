@@ -9,6 +9,19 @@ IGNORE='*「」。、…”！？　'    # Ignore these in edict lookups
 ESCAPE='*&^#$%~_{}'           # Escapes all these characters from input
 REMOVE='*'                    # Remove from mecab output
 
+# check character type
+# 0 = kanji
+# 1 = hiragana
+# 2 = katakana
+jchr()
+{
+   local char=$(printf "%d" \'$@)
+   [ $char -gt 19967 ] && [ $char -lt 40896 ] && echo 0 && return
+   [ $char -gt 12351 ] && [ $char -lt 12448 ] && echo 1 && return
+   [ $char -gt 12447 ] && [ $char -lt 12544 ] && echo 2 && return
+   echo -1
+}
+
 # convert to furigana
 # $1 = kanji/kana
 # $2 = furigana
@@ -36,7 +49,8 @@ furiganize() {
          ret="$ret${s1:0:1}"
       fi
       s2="${s2:1:${#s2}}"                       # next from furigana
-      [[ $kanji -eq 1 ]] || s1="${s1:1:${#s1}}" # next from kanji/kana
+      [[ $kanji -eq 0 ]] && s1="${s1:1:${#s1}}" # next from kanji/kana
+      [[ $kanji -eq 1 ]] && [[ $(jchr $s1) -eq 0 ]] && ret="$ret}" && kanji=0 # if next letter is kanji as well, then fsck this..
    done
    [[ $kanji -eq 1 ]] && echo -n "\\ruby{$1}{$2}" || echo -n "$ret" # if kanji is still open,
                                                                     # the whole word can be furiganized
