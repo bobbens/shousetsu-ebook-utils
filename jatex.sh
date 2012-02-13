@@ -112,6 +112,13 @@ _stem() {
    done
 }
 
+# get type of stem
+_type() {
+   while read -r pipe; do
+      echo "$pipe" | _mecab | awk -F' ' '{ print $2 }' | sed 's/,.*//g' | _remove
+   done
+}
+
 # duplicate _mecab code to save iconv calls on eucjp mode
 _kakasi() {
    while read -r pipe; do
@@ -122,7 +129,7 @@ _kakasi() {
 # get mecab reading
 _reading() {
    while read -r pipe; do
-      echo "$pipe" | _mecab | awk -F',' '{print $8}' | _remove
+      echo "$pipe" | _mecab | awk -F',' '{ print $8 }' | _remove
    done
 }
 
@@ -171,12 +178,26 @@ cache_edic() {
    echo "$1==$2==$mean" >> "$EDICT_TMP"
 }
 
+# $1 = orig
+# $2 = type
+_filter()
+{
+   [[ "$1" == "\*" ]]         && echo 1 && return
+   [[ "$2" == "助詞" ]]       && echo 1 && return
+   [[ "$2" == "助動詞" ]]     && echo 1 && return
+   [[ "$2" == "接続助詞" ]]   && echo 1 && return
+   [[ "$2" == "感動詞" ]]     && echo 1 && return
+   [[ "$1" == "て" ]]         && echo 1 && return
+   echo 0
+}
+
 main()
 {
    arg1=${1-1} # process furigana
    arg2=${2-1} # process edict
-   arg3=${3-1} # process katakana edict
-   MECABEUCJP=${4-$MECABEUCJP} # eucjp encoding? default == yes
+   arg3=${3-1} # process hiragana edict
+   arg4=${4-1} # process katakana edict
+   MECABEUCJP=${5-$MECABEUCJP} # eucjp encoding? default == yes
    [[ -f "$EDICT_TMP" ]] && rm "$EDICT_TMP"
 
    # [[ $arg1 -eq 1 ]] && echo "\\begin{furigana}"
@@ -200,7 +221,7 @@ main()
          reading=$(echo "$i" | _reading)
          if [[ "$i" == "$reading" ]] || [[ ! "$reading" ]]; then
             [[ $arg1 -eq 1 ]] && echo -n "$i"
-            [[ $arg3 -eq 1 ]] && [ "$reading" ] && [ ! "$(check_cache "$i")" ] && \
+            [[ $arg4 -eq 1 ]] && [ "$reading" ] && [ ! "$(check_cache "$i")" ] && \
                               cache_edic "$i" "$i" "$(edic_lookup "$i" "$reading")"
             continue
          fi
@@ -209,6 +230,12 @@ main()
          kana=$(echo "$reading" | _kakasi)
          if [[ "$i" == "$kana" ]] || [[ ! "$kana" ]]; then
             [[ $arg1 -eq 1 ]] && echo -n "$i"
+            if [[ $arg3 -eq 1 ]] && [ "$kana" ]; then
+               local stem="$(echo "$i" | _stem)"
+               [[ $(_filter "$stem" "$(echo $stem | _type)") -eq 1 ]] && continue # filter
+               local stemkana="$(echo "$stem" | _reading | _kakasi)"
+               cache_edic "$stem" "$stem" "$(edic_lookup "$stem" "$stemkana")"
+            fi
             continue
          fi
 
