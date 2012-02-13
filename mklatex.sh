@@ -3,6 +3,7 @@
 # Options
 FURIGANA=1 # Generate furigana for text, 0 is disable, 1 is enable.
 DICTIONARY=1 # Generate dictionary at the end of the text. 0 is disable, 1 is enable.
+HIRAGANA=1 # Include hiragana in the dictionary. 0 is disable, 1 is enable.
 KATAKANA=1 # Include katakana in the dictionary. 0 is disable, 1 is enable.
 
 # Directory paths
@@ -49,7 +50,7 @@ for FILEPATH in $INDIR/**/*.txt; do
    echo -n "   Generated TEX..."
    TSTART=$SECONDS
    echo "\storytitle{$TITLE}{$AUTHOR}" > "$OTITLE"
-   cat "$FILEPATH" | sh jatex.sh $FURIGANA $DICTIONARY $KATAKANA $EUCJP > "$TTEXT"
+   cat "$FILEPATH" | sh jatex.sh $FURIGANA $DICTIONARY $HIRAGANA $KATAKANA $EUCJP > "$TTEXT"
    cat "$LATHEAD" "$OTITLE" "$TTEXT" "$LATTAIL" > "$TFILE"
    TEND=$SECONDS
    echo " $((TEND-TSTART)) sec"
