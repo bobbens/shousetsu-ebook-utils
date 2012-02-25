@@ -9,8 +9,8 @@ HIRAGANA=1 # Include hiragana words in the dictionary. 0 is disable, 1 is enable
 KATAKANA=1 # Include katakana words in the dictionary. 0 is disable, 1 is enable.
 ENGLISH=1 # Include english sentences in the dictionary. 0 is disable, 1 is enable.
 PDF_TO_GENERATE=1 # Number of PDF's to generate
-BLOCKS_PER_PDF=1 # Number of blocks per PDF, set to 0 to generate much as we can
-SENTENCES_PER_BLOCK=5 # Number of sentences per block (page for JPN, page for EDICT && ENG)
+BLOCKS_PER_PDF=2 # Number of blocks per PDF, set to 0 to generate much as we can
+SENTENCES_PER_BLOCK=10 # Number of sentences per block (page for JPN, page for EDICT && ENG)
 
 SENTENCES_SOURCE="http://tatoeba.org/files/downloads/sentences.csv"
 SENTENCES_FILE="sentences.csv"
@@ -41,6 +41,7 @@ magic()
       echo "nojatex"
       echo "clearpage"
       echo "$ENG" | head -n${l} | tail -n${SENTENCES_PER_BLOCK}
+      echo "clearpage"
       echo "jatex"
       let l=$l+$SENTENCES_PER_BLOCK
       let i=$i+1
@@ -75,7 +76,7 @@ main()
       TFILE="$TMPDIR/tatoeba.tex"
       OFILE="$OUTDIR/${OUTFILE_TEMPLATE}-${i}.pdf"
       cat "$LATHEAD" > "$TFILE"
-      echo "\storytitle{Tatoeba Sentences}{}" >> "$TFILE"
+      echo "\storytitle{「例えば」の例文}{}" >> "$TFILE"
       magic $CNT $l | sh jatex.sh $FURIGANA $DICTIONARY $HIRAGANA $KATAKANA $EUCJP >> "$TFILE"
       cat "$LATTAIL" >> "$TFILE"
       TEND=$SECONDS
