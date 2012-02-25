@@ -18,6 +18,7 @@ ESCAPE='*&^#$%~_{}'           # Escapes all these characters from input
 REMOVE='*'                    # Remove from mecab output
 REPLACE='!?'                  # Replace these...
 SUBSTITUTE='！？'             # ...with these
+PLAINCODE=0                   # Plaincode mode, no processing is done
 
 # check character type
 # 0 = kanji
@@ -207,15 +208,33 @@ main()
       IFS="$OIFS" # reset ifs
       local origs="$(echo "$pipe" | sed "s/ / $WHITESPACE /g" | _replace | _escape | _mecab | awk -F' ' '{ print $1 }')"
       for i in $origs; do
-         if [[ $arg1 -eq 1 ]]; then # process furigana
-            # check for special treatment
-            if   [[ "$i" == "$WHITESPACE" ]]; then
-               #echo "\\jalinebreak"
-               continue
-            elif [[ "$i" == "EOS" ]]; then
-               continue
-            fi
+         # check for special treatment
+         if   [[ "$i" == "$WHITESPACE" ]]; then
+            [[ $PLAINCODE -eq 0 ]] || echo -n " "
+            continue
+         elif [[ "$i" == "EOS" ]]; then
+            continue
+         elif [[ "$i" == "nojatex" ]]; then
+            PLAINCODE=1
+            NONL=1
+            echo "\jahori"
+            continue
+         elif [[ "$i" == "jatex" ]]; then
+            PLAINCODE=0
+            NONL=1
+            echo "\javert"
+            continue
          fi
+
+         # plaincode mode?
+         if [[ $PLAINCODE -eq 1 ]]; then
+            [[ "$i" == "clearpage" ]] && i="\clearpage" && NONL=1 # Don't kill me now ;_;
+            [[ $NONL -eq 0 ]] && echo -n "$i" || echo "$i"
+            continue
+         fi
+
+         # no furigana processing, echo already
+         [[ $arg1 -eq 0 ]] && echo -n "$i"
 
          # get mecab reading
          reading=$(echo "$i" | _reading)
@@ -252,7 +271,8 @@ main()
       done
 
       # every read ends in newline, so add your newline stuff here
-      echo "\\janewline"
+      [[ $NONL -eq 0 ]] && echo "\\janewline"
+      NONL=0
 
       # reset IFS for read
       IFS=''
