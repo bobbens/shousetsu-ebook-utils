@@ -66,14 +66,12 @@ main()
 
       # Time to dump
       if [[ $i -gt 0 && $(($i % $SENTENCES_PER_BLOCK)) -eq 0 ]]; then
-         # Output files
-
          # Process the text and clear buffer
          buf="$jbuf\nnojatex\nclearpage\n$ebuf\nclearpage\njatex"
          echo -n " $b"
          echo -e "$buf" | bash jatex.sh $FURIGANA $DICTIONARY $HIRAGANA $KATAKANA $EUCJP >> "$TFILE"
          if [[ $b -lt $BLOCKS_PER_PDF ]]; then
-            echo "{ \\textstart" >> "$TFILE"
+            echo "\\clearpage{\\textstart" >> "$TFILE"
          fi
          #echo -e "$buf"
          let b=$b+1
@@ -95,12 +93,12 @@ main()
             cat "$LATTAIL" >> "$PFILE"
 
             # Generate the pdf
-            (cd "$TMPDIR"; xelatex "`basename $TFILE`" > /dev/null)
+            (cd "$TMPDIR"; xelatex "`basename $PFILE`" > /dev/null)
             TEND=$SECONDS
             echo " $((TEND-TSTART)) sec"
 
             # Copy over
-            cp "${TFILE%.tex}.pdf" "$OFILE" || exit
+            cp "${PFILE%.tex}.pdf" "$OFILE" || exit
             rm -f $TFILE
             let p=$p+1
             let b=1
