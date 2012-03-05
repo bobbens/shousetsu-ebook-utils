@@ -56,7 +56,7 @@ print( "JPN-ENG dict: %d" % len( jpn_eng_dict ) )
 keys = jpn_eng_dict.keys()
 random.shuffle( keys )
 fp_output = open( file_output, "wb" )
-output = csv.writer( fp_output, delimiter='\t' )
+output = csv.writer( fp_output, delimiter='\t', lineterminator='\n' )
 i = 0
 for jpn_data in keys:
    eng_data = jpn_eng_dict[ jpn_data ]

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # JA -> latex
 #
 # Please read before getting brain cancer from the script!
