@@ -1,0 +1,37 @@
+
+\usepackage[paperwidth=9cm, paperheight=11.5cm, top=0.5cm, left=0.5cm, right=0.5cm, bottom=0.5cm]{geometry}
+\usepackage{xeCJK} % Font and CJK stuff
+\newfontlanguage{Japanese}{JPN}
+\setCJKmainfont{IPAGothic}
+\setCJKfamilyfont{IPAhori}[Script=CJK]{IPAGothic}
+%\setCJKfamilyfont{IPAvert}[Script=CJK,Vertical=RotatedGlyphs]{IPAGothic} % We want vertical input
+\usepackage[overlap,CJK]{ruby}  % Furigana support
+%\renewcommand{\rubysize}{0.5}   % Furigana size
+%\renewcommand{\rubysep}{-1.25ex} % Spacing between Furigana and Kanji
+
+% Small macro to have titles.
+\newcommand{\storytitle}[2]{\hspace{20pt}{\large \textbf{#1}} \hspace{20pt}{\textbf{#2}}\\ \\}
+\newcommand{\edict}[2]{{\large \textbf {#1}: } {#2} \\}
+\newcommand{\javert}{\CJKfamily{IPAhori}}
+\newcommand{\jahori}{\CJKfamily{IPAhori}}
+\newcommand{\janewline}{\\}
+
+% Style
+\setlength{\parindent}{0pt} 
+
+% Spacing and style
+\usepackage{setspace}
+%\frenchspacing
+\sloppy
+\pagestyle{empty}
+
+% Furigana macros
+\newcommand{\rubyT}[2]{\ruby{#1}{#2}}
+\newcommand{\rubyE}[2]{\ruby{#1}{#2}}
+
+% Section macros
+\newcommand{\textstart}{\javert \noindent \begin{spacing}{1.3}}
+\newcommand{\textend}{\end{spacing} \newpage \jahori \noindent}
+\newcommand{\edictstart}{\jahori \noindent \renewcommand{\rubysep}{0.0ex}}
+\newcommand{\edictend}{}
+

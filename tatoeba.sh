@@ -25,7 +25,7 @@ OUTDIR=pdfs
 TMPDIR=.latex_out
 
 # Latex xstuff
-LATHEAD=head.tex
+LATHEAD=head-hor.tex
 LATTAIL=tail.tex
 
 
